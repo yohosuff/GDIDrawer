@@ -171,11 +171,16 @@ namespace GDIDrawer
         private bool m_bLastMouseLeftClickNew = false;
         private Point m_pLastMouseRightClick = new Point(-1, -1);
         private bool m_bLastMouseRightClickNew = false;
+        private Point m_pLastMouseMiddleClick = new Point(-1, -1);
+        private bool m_bLastMouseMiddleClickNew = false;
+        
         private Point m_pLastMouseLeftClickScaled = new Point(-1, -1);
         private bool m_bLastMouseLeftClickNewScaled = false;
         private Point m_pLastMouseRightClickScaled = new Point(-1, -1);
         private bool m_bLastMouseRightClickNewScaled = false;
-
+        private Point m_pLastMouseMiddleClickScaled = new Point(-1, -1);
+        private bool m_bLastMouseMiddleClickNewScaled = false;
+        
         // event delegates
         /// <summary>
         /// The mouse has moved over the drawer window
@@ -186,6 +191,9 @@ namespace GDIDrawer
         public event GDIDrawerMouseEvent MouseLeftClickScaled = null;
         public event GDIDrawerMouseEvent MouseRightClick = null;
         public event GDIDrawerMouseEvent MouseRightClickScaled = null;
+        public event GDIDrawerMouseEvent MouseMiddleClick = null;
+        public event GDIDrawerMouseEvent MouseMiddleClickScaled = null;
+
 
         /// <summary>
         /// Close the Drawer
@@ -310,6 +318,45 @@ namespace GDIDrawer
 
             // else return old coords, but indicate stale
             pCoords = m_pLastMouseRightClickScaled;
+            return false;
+        }
+
+        /// <summary>
+        /// Retrieve last known point of Mouse Middle Click in CDrawer
+        /// </summary>
+        /// <param name="pCoords">out : last known point of Middle Click</param>
+        /// <returns>true if point is new since last read</returns>
+        public bool GetLastMouseMiddleClick(out Point pCoords)
+        {
+            // if the mouse has right clicked since last read, return actual coords
+            if (m_bLastMouseMiddleClickNew)
+            {
+                m_bLastMouseMiddleClickNew = false;
+                pCoords = m_pLastMouseMiddleClick;
+                return true;
+            }
+            // else return old coords, but indicate stale
+            pCoords = m_pLastMouseMiddleClick;
+            return false;
+        }
+
+        /// <summary>
+        /// Retrieve Scaled last known point of Mouse Middle Click in CDrawer
+        /// </summary>
+        /// <param name="pCoords">out : scaled last known point of Middle Click</param>
+        /// <returns>true if point is new since last read</returns>
+        public bool GetLastMouseMiddleClickScaled(out Point pCoords)
+        {
+            // if the mouse has moved since last read, return actual coords
+            if (m_bLastMouseMiddleClickNewScaled)
+            {
+                m_bLastMouseMiddleClickNewScaled = false;
+                pCoords = m_pLastMouseMiddleClickScaled;
+                return true;
+            }
+
+            // else return old coords, but indicate stale
+            pCoords = m_pLastMouseMiddleClickScaled;
             return false;
         }
 
@@ -501,6 +548,7 @@ namespace GDIDrawer
             // setup delegate for callback in drawer window to handle mouse click events
             m_wDrawer.m_delMouseLeftClick = new DrawerWnd.delVoidPoint(CBMouseLeftClick);
             m_wDrawer.m_delMouseRightClick = new DrawerWnd.delVoidPoint(CBMouseRightClick);
+            m_wDrawer.m_delMouseMiddleClick = new DrawerWnd.delVoidPoint(CBMouseMiddleClick);
 
             // start the drawer window in this thread
             Application.Run(m_wDrawer);
@@ -618,6 +666,43 @@ namespace GDIDrawer
                 catch (Exception err)
                 {
                     _log.WriteLine("CDrawer::CBMouseRightClick : " + err.Message);
+                }
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Callback from drawer window that handles a mouse middle click event
+        ///////////////////////////////////////////////////////////////////////////////////////
+        internal void CBMouseMiddleClick(Point pt)
+        {
+            // save the last known mouse click position and mark as changed
+            m_pLastMouseMiddleClick = pt;
+            m_bLastMouseMiddleClickNew = true;
+
+            try
+            {
+                if (MouseMiddleClick != null)
+                    MouseMiddleClick(pt, this);
+            }
+            catch (Exception err)
+            {
+                _log.WriteLine("CDrawer::CBMouseMiddleClick : " + err.Message);
+            }
+
+            Point pTemp = new Point(pt.X / m_iScale, pt.Y / m_iScale);
+            if ((pTemp != m_pLastMouseMiddleClickScaled) || RedundaMouse)
+            {
+                m_pLastMouseMiddleClickScaled = pTemp;
+                m_bLastMouseMiddleClickNewScaled = true;
+
+                try
+                {
+                    if (MouseMiddleClickScaled != null)
+                        MouseMiddleClickScaled(pTemp, this);
+                }
+                catch (Exception err)
+                {
+                    _log.WriteLine("CDrawer::CBMouseMiddleClick : " + err.Message);
                 }
             }
         }
