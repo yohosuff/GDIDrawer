@@ -48,6 +48,7 @@ namespace GDIDrawer
         internal delVoidPoint m_delMouseMove;
         internal delVoidPoint m_delMouseLeftClick;
         internal delVoidPoint m_delMouseRightClick;
+        internal delVoidPoint m_delMouseMiddleClick;
 
         // this flag indicates that the drawer window is fully initialized and ready for rendering
         internal bool m_bIsInitialized = false;
@@ -348,6 +349,11 @@ namespace GDIDrawer
             {
                 if (m_delMouseRightClick != null && e.X >= 0 && e.X < m_ciWidth && e.Y > 0 && e.Y < m_ciHeight)
                     m_delMouseRightClick(e.Location);
+            }
+            else if(e.Button == MouseButtons.Middle)
+            {
+                if (m_delMouseMiddleClick != null && e.X >= 0 && e.X < m_ciWidth && e.Y > 0 && e.Y < m_ciHeight)
+                    m_delMouseMiddleClick(e.Location);
             }
         }
 
